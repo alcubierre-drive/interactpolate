@@ -1,0 +1,6 @@
+*.o
+*.d
+*.vim
+*.so
+*.local
+*.inc
