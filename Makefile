@@ -14,8 +14,8 @@ INCLUDES =
 DEFINES = 
 LIBS = -lm
 
-SRC_C := $(shell find ./ -name '*.c')
-SRC_CPP := $(shell find ./ -name '*.cpp')
+SRC_C := $(wildcard *.c)
+SRC_CPP := $(wildcard *.cpp)
 
 OBJ_C := $(patsubst %.c,%.c.o,$(SRC_C))
 OBJ_CPP := $(patsubst %.cpp,%.cpp.o,$(SRC_CPP))
@@ -23,8 +23,7 @@ OBJ_CPP := $(patsubst %.cpp,%.cpp.o,$(SRC_CPP))
 DEP_C := $(patsubst %.c,%.c.d,$(SRC_C))
 DEP_CPP := $(patsubst %.cpp,%.cpp.d,$(SRC_CPP))
 
-HEADERS := $(shell find ./ -name '*.h') \
-	   $(shell find ./ -name '*.hpp') \
+HEADERS := $(wildcard *.h *.hpp)
 
 -include Makefile.inc
 -include Makefile.local

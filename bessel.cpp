@@ -1,4 +1,4 @@
-#include "interaction.cpp.h"
+#include "bessel.h"
 #include <cmath>
 
 #ifndef KMAX
