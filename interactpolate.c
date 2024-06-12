@@ -84,9 +84,9 @@ interactpolate_t* interactpolate_init( double U, double ohno_dist, double gate_d
     double r1 = ii->x[INTERACTION_INTERP_NUM-2], r2 = ii->x[INTERACTION_INTERP_NUM-1],
            V1 = ii->y[INTERACTION_INTERP_NUM-2], V2 = ii->y[INTERACTION_INTERP_NUM-1];
 
-    double lambda = log( V1*r2 / (V2*r1) ) / (r2 - r1);
-    double V01 = V1 / exp(-lambda * r1) * r1;
-    double V02 = V2 / exp(-lambda * r2) * r2;
+    double lambda = log( V1*sqrt(r2) / (V2*sqrt(r1)) ) / (r2 - r1);
+    double V01 = V1 / exp(-lambda * r1) * sqrt(r1);
+    double V02 = V2 / exp(-lambda * r2) * sqrt(r2);
 
     ii->interp_maxdist_lambda = lambda;
     ii->interp_maxdist_V0 = 0.5*(V01+V02);
