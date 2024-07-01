@@ -1,6 +1,8 @@
 #include "bessel.h"
 #include <cmath>
 
+#ifndef USE_BARE_C_BESSEL
+
 #ifndef KMAX
 #define KMAX 2000
 #endif
@@ -18,3 +20,4 @@ double gate_screened_coulomb_shape( double dist_over_gate_dist ) {
     return val;
 }
 
+#endif // USE_BARE_C_BESSEL

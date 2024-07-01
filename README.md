@@ -36,13 +36,17 @@ a = \frac{\alpha}{\epsilon\,U} \,.
 The fine-structure constant $`\alpha`$ and the dielectric constant $`\epsilon`$
 determine the interaction strength s.t. it follwos $`\alpha/\epsilon r`$ in
 intermediate distances. Note that $`\epsilon`$ should not carry any units, and
-$`\alpha = 14.40\,\mathrm{eV}\text{\AA}`$ in SI units (inserted some $`\hbar c`$
+$`\alpha = 14.40\,\mathrm{eV}\text{Å}`$ in SI units (inserted some $`\hbar c`$
 to get those units).
 
 # Usage
 
 see test/use.c and test/Makefile for how to use this library. It's fast as long
-as use have one handle (roughly as fast as evaluating exp(..)/sqrt(..)),
-creation of the handle is what's slow.
+as you have one handle (roughly as fast as evaluating exp(..)/sqrt(..)).
+Creation of the handle is what's slow.
 
-`
+# Compilation
+
+If you don't like to use C++ and its library implementation of the Bessel
+function $`K_0(x)`$, you can use the DEFINE ``USE_BARE_C_BESSEL``, i.e., put
+``DEFINES += -DUSE_BARE_C_BESSEL`` in your Makefile.local/Makefile.inc.
