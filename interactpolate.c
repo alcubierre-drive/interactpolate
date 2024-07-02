@@ -11,41 +11,42 @@
 #define POW2(x) ((x)*(x))
 #endif
 
-#ifndef INTERACTION_INTERP_NUM
-#define INTERACTION_INTERP_NUM 2000
-#endif
-
-#ifndef INTERACTION_ZERO_SHIFT
-#define INTERACTION_ZERO_SHIFT 1.e-9
-#endif
-
-#ifndef INTERACTION_GATE_DIST_ZERO
-#define INTERACTION_GATE_DIST_ZERO 2.e-4
-#endif
-
 #ifndef wrn_printf
 #define wrn_printf( ... ) fprintf( stderr, __VA_ARGS__ )
 #endif
-
-static int _nthr = -1;
-void interactpolate_init_set_num_threads( int nthr ) {
-    _nthr = nthr;
-}
 
 struct interactpolate_t {
     double ohno_dist;
     double gate_dist;
     double U;
 
-    double x[INTERACTION_INTERP_NUM];
-    double y[INTERACTION_INTERP_NUM];
+    double* x;
+    double* y;
 
     cspline_t* spline;
 
     double interp_maxdist;
     double interp_maxdist_lambda;
     double interp_maxdist_V0;
+
+    size_t interp_num;
 };
+
+static size_t INTERACTION_INTERP_NUM = 2048;
+static double INTERACTION_ZERO_SHIFT = 1.e-9;
+static double INTERACTION_GATE_DIST_ZERO = 2.e-4;
+static int INTERACTPOLATE_NUM_THREADS = -1;
+
+static int interactpolate_get_num_threads( void );
+static interactpolate_t* interactpolate_alloc( void );
+
+void interactpolate_init_set_num_threads( int nthr ) {
+    INTERACTPOLATE_NUM_THREADS = nthr;
+}
+
+void interactpolate_init_set_num_points( int npts ) {
+    INTERACTION_INTERP_NUM = npts;
+}
 
 interactpolate_t* interactpolate_init( double U, double ohno_dist, double gate_dist ) {
     if (gate_dist < 0) gate_dist = fabs(gate_dist);
@@ -57,7 +58,7 @@ interactpolate_t* interactpolate_init( double U, double ohno_dist, double gate_d
         wrn_printf( "reset gate_dist=%.2e (ohno_dist=%.2e)\n", gate_dist, ohno_dist );
     }
 
-    interactpolate_t* ii = calloc( 1, sizeof(interactpolate_t) );
+    interactpolate_t* ii = interactpolate_alloc();
 
     ii->U = U;
     ii->ohno_dist = ohno_dist;
@@ -68,21 +69,20 @@ interactpolate_t* interactpolate_init( double U, double ohno_dist, double gate_d
     double G0 = gate_screened_coulomb_shape( R0 / ii->gate_dist ) / ii->gate_dist; // this shuold be alpha/R0
     double alpha = G0 * R0;
 
-    int nthr = _nthr <= 0 ? omp_get_max_threads() : _nthr;
-    #pragma omp parallel for num_threads(nthr)
-    for (int i=0; i<INTERACTION_INTERP_NUM; ++i) {
-        double xrel = (double)i/(double)(INTERACTION_INTERP_NUM - 1);
+    #pragma omp parallel for num_threads(interactpolate_get_num_threads())
+    for (int i=0; i<ii->interp_num; ++i) {
+        double xrel = (double)i/(double)(ii->interp_num - 1);
         ii->x[i] = xrel * ii->interp_maxdist + INTERACTION_ZERO_SHIFT; // for safety
         double G_r = gate_screened_coulomb_shape( ii->x[i] / ii->gate_dist ) / ii->gate_dist / alpha;
         ii->y[i] = ii->U / sqrt( 1. + 1./(POW2(G_r * ii->ohno_dist)) );
     }
 
-    ii->spline = cspline_init( INTERACTION_INTERP_NUM, ii->x, ii->y );
+    ii->spline = cspline_init( ii->interp_num, ii->x, ii->y );
 
-    ii->interp_maxdist = ii->x[INTERACTION_INTERP_NUM-1];
+    ii->interp_maxdist = ii->x[ii->interp_num-1];
 
-    double r1 = ii->x[INTERACTION_INTERP_NUM-2], r2 = ii->x[INTERACTION_INTERP_NUM-1],
-           V1 = ii->y[INTERACTION_INTERP_NUM-2], V2 = ii->y[INTERACTION_INTERP_NUM-1];
+    double r1 = ii->x[ii->interp_num-2], r2 = ii->x[ii->interp_num-1],
+           V1 = ii->y[ii->interp_num-2], V2 = ii->y[ii->interp_num-1];
 
     double lambda = log( V1*sqrt(r2) / (V2*sqrt(r1)) ) / (r2 - r1);
     double V01 = V1 / exp(-lambda * r1) * sqrt(r1);
@@ -99,7 +99,7 @@ interactpolate_t* interactpolate_abinit( double U, double alpha, double eps, dou
     if (alpha < 0) alpha = fabs(alpha);
     if (eps < 0) eps = fabs(eps);
 
-    interactpolate_t* ii = calloc( 1, sizeof(interactpolate_t) );
+    interactpolate_t* ii = interactpolate_alloc();
 
     double V0 = alpha / (eps * gate_dist),
            ohno_dist = alpha / (eps * U);
@@ -109,21 +109,20 @@ interactpolate_t* interactpolate_abinit( double U, double alpha, double eps, dou
     ii->gate_dist = gate_dist;
     ii->interp_maxdist = gate_dist * 5.;
 
-    int nthr = _nthr <= 0 ? omp_get_max_threads() : _nthr;
-    #pragma omp parallel for num_threads(nthr)
-    for (int i=0; i<INTERACTION_INTERP_NUM; ++i) {
-        double xrel = (double)i/(double)(INTERACTION_INTERP_NUM - 1);
+    #pragma omp parallel for num_threads(interactpolate_get_num_threads())
+    for (int i=0; i<ii->interp_num; ++i) {
+        double xrel = (double)i/(double)(ii->interp_num - 1);
         ii->x[i] = xrel * ii->interp_maxdist - INTERACTION_ZERO_SHIFT; // yes, it's the other way 'round here
         double ii_kernel = gate_screened_coulomb_shape( sqrt(POW2(ii->x[i])+POW2(ii->ohno_dist))/ii->gate_dist );
         ii->y[i] = V0 * 4 * ii_kernel;
     }
 
-    ii->spline = cspline_init( INTERACTION_INTERP_NUM, ii->x, ii->y );
+    ii->spline = cspline_init( ii->interp_num, ii->x, ii->y );
 
-    ii->interp_maxdist = ii->x[INTERACTION_INTERP_NUM-1];
+    ii->interp_maxdist = ii->x[ii->interp_num-1];
 
-    double r1 = ii->x[INTERACTION_INTERP_NUM-2], r2 = ii->x[INTERACTION_INTERP_NUM-1],
-           V1 = ii->y[INTERACTION_INTERP_NUM-2], V2 = ii->y[INTERACTION_INTERP_NUM-1];
+    double r1 = ii->x[ii->interp_num-2], r2 = ii->x[ii->interp_num-1],
+           V1 = ii->y[ii->interp_num-2], V2 = ii->y[ii->interp_num-1];
 
     double lambda = log( V1*sqrt(r2) / (V2*sqrt(r1)) ) / (r2 - r1);
     double V01 = V1 / exp(-lambda * r1) * sqrt(r1);
@@ -155,7 +154,20 @@ double interactpolate_get( const interactpolate_t* ii, double r ) {
 
 void interactpolate_free( interactpolate_t* ii ) {
     cspline_free( ii->spline );
+    free( ii->x );
+    free( ii->y );
     free( ii );
 }
 
+static int interactpolate_get_num_threads( void ) {
+    return INTERACTPOLATE_NUM_THREADS <= 0 ? omp_get_max_threads() : INTERACTPOLATE_NUM_THREADS;
+}
+
+static interactpolate_t* interactpolate_alloc( void ) {
+    interactpolate_t* ii = calloc( 1, sizeof(interactpolate_t) );
+    ii->interp_num = INTERACTION_INTERP_NUM;
+    ii->x = calloc( ii->interp_num, sizeof(double) );
+    ii->y = calloc( ii->interp_num, sizeof(double) );
+    return ii;
+}
 
