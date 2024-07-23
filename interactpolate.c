@@ -70,7 +70,7 @@ interactpolate_t* interactpolate_init( double U, double ohno_dist, double gate_d
     double alpha = G0 * R0;
 
     #pragma omp parallel for num_threads(interactpolate_get_num_threads())
-    for (int i=0; i<ii->interp_num; ++i) {
+    for (size_t i=0; i<ii->interp_num; ++i) {
         double xrel = (double)i/(double)(ii->interp_num - 1);
         ii->x[i] = xrel * ii->interp_maxdist + INTERACTION_ZERO_SHIFT; // for safety
         double G_r = gate_screened_coulomb_shape( ii->x[i] / ii->gate_dist ) / ii->gate_dist / alpha;
@@ -110,7 +110,7 @@ interactpolate_t* interactpolate_abinit( double U, double alpha, double eps, dou
     ii->interp_maxdist = gate_dist * 5.;
 
     #pragma omp parallel for num_threads(interactpolate_get_num_threads())
-    for (int i=0; i<ii->interp_num; ++i) {
+    for (size_t i=0; i<ii->interp_num; ++i) {
         double xrel = (double)i/(double)(ii->interp_num - 1);
         ii->x[i] = xrel * ii->interp_maxdist - INTERACTION_ZERO_SHIFT; // yes, it's the other way 'round here
         double ii_kernel = gate_screened_coulomb_shape( sqrt(POW2(ii->x[i])+POW2(ii->ohno_dist))/ii->gate_dist );
