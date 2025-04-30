@@ -43,7 +43,8 @@ to get those units).
 
 see test/use.c and test/Makefile for how to use this library. It's fast as long
 as you have one handle (roughly as fast as evaluating exp(..)/sqrt(..)).
-Creation of the handle is what's slow.
+Creation of the handle is what's slow. [Documentation
+here](https://alcubierre-drive.github.io/interactpolate/).
 
 # Compilation
 
