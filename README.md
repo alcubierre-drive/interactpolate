@@ -4,8 +4,8 @@ This small library helps with Coulomb interactions that don't follow a simple
 (as in computationally simple/fast) functional form, but are expensive to
 calculate. Currently, the only interaction profile that's implemented is the
 dual-gated Coulomb interaction [cf. Phys. Rev. B 86, 115447 (2012)], but with an
-$`r=0`$ regularization a la Ohno. Other profiles could be implemented trivially in
-the future.
+$`r=0`$ regularization a la Ohno [cf. Phys. Rev. B 110, L201113 (2024)]. Other
+profiles could be implemented trivially in the future.
 
 The long-ranged part of the interaction is given as $V_\mathrm{long}(r)$:
 ```math
