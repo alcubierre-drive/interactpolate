@@ -26,13 +26,13 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
-html_theme_options = {
-    'body_max_width' : '50em',
-    'page_width': 'auto',
-    'sidebar_width': '18em',
-}
+# html_theme_options = {
+#     'body_max_width' : '50em',
+#     'page_width': 'auto',
+#     'sidebar_width': '18em',
+# }
 
 # C doc config
 hawkmoth_root = os.path.abspath('../')
