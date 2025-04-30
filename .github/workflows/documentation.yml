@@ -13,8 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme myst_parser hawkmoth python3-clang
-          sudo apt-get install clang
+          pip install sphinx sphinx_rtd_theme myst_parser hawkmoth
+          sudo apt-get install python3-clang clang
       - name: Sphinx build
         run: |
           sphinx-build doc _build
